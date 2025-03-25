@@ -1,0 +1,1 @@
+# ChatGPT Sidebar Extension
