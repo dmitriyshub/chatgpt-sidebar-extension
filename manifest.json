@@ -1,33 +1,31 @@
 {
   "manifest_version": 3,
   "name": "ChatGPT Sidebar Assistant",
-  "description": "A lightweight ChatGPT-powered sidebar accessible from any page.",
   "version": "1.0",
+  "description": "A sidebar-based ChatGPT assistant with inline chat and settings.",
   "permissions": [
     "storage",
     "scripting",
     "tabs",
     "activeTab"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "Toggle ChatGPT Sidebar",
     "default_icon": {
       "16": "icons/icon.png",
       "48": "icons/icon.png",
       "128": "icons/icon.png"
-    },
-    "default_title": "Toggle ChatGPT Sidebar"
+    }
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ]
 }

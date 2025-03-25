@@ -1,58 +1,183 @@
+// content.js — Brave-compatible DOM-injected sidebar with Chat + Settings
 (function () {
-    const existing = document.getElementById('chatgpt-sidebar-wrapper');
-    if (existing) {
-      existing.remove();
+    if (document.getElementById("chatgpt-sidebar-wrapper")) {
+      document.getElementById("chatgpt-sidebar-wrapper").remove();
       chrome.storage.local.set({ sidebarOpen: false });
       return;
     }
   
-    const wrapper = document.createElement('div');
-    wrapper.id = 'chatgpt-sidebar-wrapper';
-    wrapper.style.position = 'fixed';
-    wrapper.style.top = '0';
-    wrapper.style.right = '0';
-    wrapper.style.width = '400px';
-    wrapper.style.height = '100vh';
-    wrapper.style.zIndex = '9999999';
-    wrapper.style.background = '#f9f9f9';
-    wrapper.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
-    wrapper.style.fontFamily = 'sans-serif';
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
+    chrome.storage.local.set({ sidebarOpen: true });
   
-    // Header
-    const header = document.createElement('div');
-    header.style.background = '#4a90e2';
-    header.style.color = '#fff';
-    header.style.padding = '12px 16px';
-    header.style.fontSize = '16px';
-    header.style.fontWeight = 'bold';
-    header.textContent = 'ChatGPT Sidebar Assistant';
+    const wrapper = document.createElement("div");
+    wrapper.id = "chatgpt-sidebar-wrapper";
+    wrapper.style.position = "fixed";
+    wrapper.style.top = "0";
+    wrapper.style.right = "0";
+    wrapper.style.height = "100vh";
+    wrapper.style.width = "400px";
+    wrapper.style.zIndex = "9999999";
+    wrapper.style.background = "#f9f9f9";
+    wrapper.style.boxShadow = "-2px 0 5px rgba(0,0,0,0.1)";
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.borderLeft = "1px solid #ccc";
   
-    // Content
-    const content = document.createElement('div');
-    content.style.flex = '1';
-    content.style.padding = '16px';
-    content.style.overflowY = 'auto';
-    content.innerHTML = `<p>Sidebar loaded successfully.</p>`;
+    const style = document.createElement("style");
+    style.textContent = `
+      #chatgpt-sidebar-wrapper button {
+        font-family: sans-serif;
+        cursor: pointer;
+      }
+      #chatgpt-menu {
+        display: flex;
+        justify-content: space-between;
+        background: #4a90e2;
+        padding: 10px;
+        color: white;
+      }
+      #chatgpt-menu button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 14px;
+      }
+      #chatgpt-chat, #chatgpt-settings {
+        flex: 1;
+        padding: 10px;
+        display: none;
+        overflow-y: auto;
+      }
+      #chatgpt-chat.active, #chatgpt-settings.active {
+        display: block;
+      }
+      #chatgpt-output {
+        height: 60vh;
+        overflow-y: auto;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #ddd;
+        margin-bottom: 8px;
+      }
+      #chatgpt-prompt {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      #chatgpt-settings input {
+        width: 100%;
+        margin-bottom: 6px;
+        padding: 6px;
+      }
+      #chatgpt-settings button {
+        margin-top: 4px;
+        width: 100%;
+      }
+    `;
   
-    // Close button
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.margin = '12px';
-    closeBtn.style.alignSelf = 'flex-end';
-    closeBtn.style.padding = '6px 12px';
-    closeBtn.style.border = 'none';
-    closeBtn.style.background = '#ccc';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.onclick = () => {
+    const menu = document.createElement("div");
+    menu.id = "chatgpt-menu";
+    menu.innerHTML = `
+      <span>ChatGPT Assistant</span>
+      <div>
+        <button id="chatgpt-tab-chat">💬 Chat</button>
+        <button id="chatgpt-tab-settings">⚙️ Settings</button>
+        <button id="chatgpt-close">✖</button>
+      </div>
+    `;
+  
+    const chat = document.createElement("div");
+    chat.id = "chatgpt-chat";
+    chat.classList.add("active");
+    chat.innerHTML = `
+      <div id="chatgpt-output"></div>
+      <textarea id="chatgpt-prompt" rows="3" placeholder="Ask ChatGPT..."></textarea>
+      <button id="chatgpt-send">Send</button>
+    `;
+  
+    const settings = document.createElement("div");
+    settings.id = "chatgpt-settings";
+    settings.innerHTML = `
+      <input type="password" id="chatgpt-apikey" placeholder="Enter API Key (sk-...)" />
+      <button id="chatgpt-savekey">Save API Key</button>
+      <button id="chatgpt-removekey">Remove API Key</button>
+      <p id="chatgpt-status"></p>
+    `;
+  
+    wrapper.appendChild(style);
+    wrapper.appendChild(menu);
+    wrapper.appendChild(chat);
+    wrapper.appendChild(settings);
+    document.body.appendChild(wrapper);
+  
+    const $ = (id) => document.getElementById(id);
+  
+    $("chatgpt-tab-chat").onclick = () => {
+      chat.classList.add("active");
+      settings.classList.remove("active");
+    };
+  
+    $("chatgpt-tab-settings").onclick = () => {
+      chat.classList.remove("active");
+      settings.classList.add("active");
+      chrome.storage.local.get("openaiApiKey", (data) => {
+        $("chatgpt-apikey").value = data.openaiApiKey || "";
+      });
+    };
+  
+    $("chatgpt-savekey").onclick = () => {
+      const key = $("chatgpt-apikey").value.trim();
+      chrome.storage.local.set({ openaiApiKey: key }, () => {
+        $("chatgpt-status").textContent = "✅ API Key saved.";
+        $("chatgpt-status").style.color = "green";
+      });
+    };
+  
+    $("chatgpt-removekey").onclick = () => {
+      chrome.storage.local.remove("openaiApiKey", () => {
+        $("chatgpt-apikey").value = "";
+        $("chatgpt-status").textContent = "🗑️ Key removed.";
+        $("chatgpt-status").style.color = "red";
+      });
+    };
+  
+    $("chatgpt-close").onclick = () => {
       wrapper.remove();
       chrome.storage.local.set({ sidebarOpen: false });
     };
   
-    wrapper.appendChild(header);
-    wrapper.appendChild(content);
-    wrapper.appendChild(closeBtn);
-    document.body.appendChild(wrapper);
-    chrome.storage.local.set({ sidebarOpen: true });
+    $("chatgpt-send").onclick = async () => {
+      const prompt = $("chatgpt-prompt").value.trim();
+      if (!prompt) return;
+  
+      const out = $("chatgpt-output");
+      out.innerHTML += `<div><strong>You:</strong> ${prompt}</div>`;
+      $("chatgpt-prompt").value = "";
+  
+      chrome.storage.local.get("openaiApiKey", async ({ openaiApiKey }) => {
+        if (!openaiApiKey) {
+          out.innerHTML += `<div style='color:red;'>❌ No API Key found.</div>`;
+          return;
+        }
+        try {
+          const res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${openaiApiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-3.5-turbo",
+              messages: [{ role: "user", content: prompt }]
+            })
+          });
+          const data = await res.json();
+          const reply = data.choices?.[0]?.message?.content || "(No response)";
+          out.innerHTML += `<div><strong>ChatGPT:</strong> ${reply}</div>`;
+          out.scrollTop = out.scrollHeight;
+        } catch (err) {
+          out.innerHTML += `<div style='color:red;'>❌ ${err.message}</div>`;
+        }
+      });
+    };
   })();
+  
