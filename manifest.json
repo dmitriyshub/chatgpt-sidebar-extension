@@ -1,32 +1,33 @@
 {
-    "manifest_version": 3,
-    "name": "ChatGPT Sidebar Assistant",
-    "description": "A lightweight ChatGPT-powered sidebar accessible from any page.",
-    "version": "1.0",
-    "permissions": [
-      "storage",
-      "scripting",
-      "tabs",
-      "activeTab"
-    ],
-    "host_permissions": [
-      "<all_urls>"
-    ],
-    "background": {
-      "service_worker": "background.js"
+  "manifest_version": 3,
+  "name": "ChatGPT Sidebar Assistant",
+  "description": "A lightweight ChatGPT-powered sidebar accessible from any page.",
+  "version": "1.0",
+  "permissions": [
+    "storage",
+    "scripting",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon.png",
+      "48": "icons/icon.png",
+      "128": "icons/icon.png"
     },
-    "action": {
-      "default_icon": {
-        "16": "icons/icon.png",
-        "48": "icons/icon.png",
-        "128": "icons/icon.png"
-      },
-      "default_title": "Toggle ChatGPT Sidebar"
-    },
-    "content_scripts": [
-      {
-        "matches": ["<all_urls>"],
-        "js": ["content.js"]
-      }
-    ]
-  }
+    "default_title": "Toggle ChatGPT Sidebar"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
