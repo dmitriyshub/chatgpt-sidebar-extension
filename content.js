@@ -1,13 +1,13 @@
-// content.js — Brave-compatible DOM-injected sidebar with Chat + Settings
+// content.js — Brave-compatible DOM-injected sidebar with Chat + Settings + Theme Toggle
 (function () {
     if (document.getElementById("chatgpt-sidebar-wrapper")) {
       document.getElementById("chatgpt-sidebar-wrapper").remove();
       chrome.storage.local.set({ sidebarOpen: false });
       return;
     }
-  
+
     chrome.storage.local.set({ sidebarOpen: true });
-  
+
     const wrapper = document.createElement("div");
     wrapper.id = "chatgpt-sidebar-wrapper";
     wrapper.style.position = "fixed";
@@ -21,17 +21,52 @@
     wrapper.style.display = "flex";
     wrapper.style.flexDirection = "column";
     wrapper.style.borderLeft = "1px solid #ccc";
-  
+
     const style = document.createElement("style");
     style.textContent = `
       #chatgpt-sidebar-wrapper button {
         font-family: sans-serif;
         cursor: pointer;
       }
+      #chatgpt-sidebar-wrapper.dark {
+        background: #1e1e1e;
+        color: white;
+      }
+      #chatgpt-sidebar-wrapper.dark #chatgpt-menu {
+        background: #333;
+        color: white;
+      }
+      #chatgpt-sidebar-wrapper.dark #chatgpt-output {
+        background: #2a2a2a;
+        color: #eee;
+        border-color: #444;
+      }
+      #chatgpt-sidebar-wrapper.dark #chatgpt-prompt {
+        background: #2e2e2e;
+        color: #f0f0f0;
+        border: 1px solid #555;
+      }
+      #chatgpt-sidebar-wrapper.dark button {
+        background-color: #444;
+        color: #f0f0f0;
+        border: 1px solid #555;
+      }
+      #chatgpt-sidebar-wrapper.dark input {
+        background-color: #2a2a2a;
+        color: #eee;
+        border: 1px solid #555;
+      }
+      #chatgpt-sidebar-wrapper.dark ::-webkit-scrollbar {
+        width: 8px;
+      }
+      #chatgpt-sidebar-wrapper.dark ::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 4px;
+      }
       #chatgpt-menu {
         display: flex;
         justify-content: space-between;
-        background: #4a90e2;
+        background: #2e8b57;
         padding: 10px;
         color: white;
       }
@@ -72,6 +107,10 @@
         margin-top: 4px;
         width: 100%;
       }
+      #chatgpt-theme-toggle {
+        margin-top: 10px;
+        padding: 6px;
+      }
     `;
   
     const menu = document.createElement("div");
@@ -100,6 +139,7 @@
       <input type="password" id="chatgpt-apikey" placeholder="Enter API Key (sk-...)" />
       <button id="chatgpt-savekey">Save API Key</button>
       <button id="chatgpt-removekey">Remove API Key</button>
+      <button id="chatgpt-theme-toggle">Toggle Light/Dark Mode</button>
       <p id="chatgpt-status"></p>
     `;
   
@@ -122,6 +162,9 @@
       chrome.storage.local.get("openaiApiKey", (data) => {
         $("chatgpt-apikey").value = data.openaiApiKey || "";
       });
+      chrome.storage.local.get("chatgptTheme", (data) => {
+        wrapper.classList.toggle("dark", data.chatgptTheme === "dark");
+      });
     };
   
     $("chatgpt-savekey").onclick = () => {
@@ -138,6 +181,11 @@
         $("chatgpt-status").textContent = "🗑️ Key removed.";
         $("chatgpt-status").style.color = "red";
       });
+    };
+  
+    $("chatgpt-theme-toggle").onclick = () => {
+      const isDark = wrapper.classList.toggle("dark");
+      chrome.storage.local.set({ chatgptTheme: isDark ? "dark" : "light" });
     };
   
     $("chatgpt-close").onclick = () => {
@@ -179,5 +227,9 @@
         }
       });
     };
-  })();
   
+    // Apply saved theme on initial load
+    chrome.storage.local.get("chatgptTheme", (data) => {
+      wrapper.classList.toggle("dark", data.chatgptTheme === "dark");
+    });
+  })();

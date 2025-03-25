@@ -1,0 +1,26 @@
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables or secrets
+.env
+.env.*
+
+# VSCode settings (optional)
+.vscode/
+
+# Temporary/backup files
+*.swp
+*.tmp
+*.bak
+
+# Chrome extension local storage
+*.localstorage
+*.ldb
+
+# Additional
+
+secret
